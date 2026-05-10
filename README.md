@@ -13,6 +13,7 @@
 ## 📋 Table of Contents
 
 - [Overview](#overview)
+- [Workflow Screenshot](#workflow-Screenshot)
 - [Workflow Diagram](#workflow-diagram)
 - [Node Breakdown](#node-breakdown)
 - [Prerequisites](#prerequisites)
@@ -27,7 +28,7 @@ This n8n workflow runs on a **five minute schedule**, picks up to **5 unread ema
 
 ---
 
-## 📸 Workflow Screenshot
+## Workflow Screenshot
 ![Workflow Overview](assets/workflow.png)
 
 ---
