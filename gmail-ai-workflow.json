@@ -1,5 +1,4 @@
 {
-  "name": "AI Gmail Summarizer",
   "nodes": [
     {
       "parameters": {
@@ -14,8 +13,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        0,
-        0
+        -176,
+        -128
       ],
       "id": "327e3a4e-15f6-4757-b718-a67d38576545",
       "name": "Schedule Trigger"
@@ -24,15 +23,17 @@
       "parameters": {
         "operation": "getAll",
         "limit": "=5",
+        "simple": false,
         "filters": {
           "q": "=is:unread"
-        }
+        },
+        "options": {}
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        208,
-        0
+        32,
+        -128
       ],
       "id": "dfa25d08-3174-410a-a133-35ad14b1e62f",
       "name": "Get many messages",
@@ -56,7 +57,7 @@
           "conditions": [
             {
               "id": "2a282f8c-6371-4024-9c74-e2f437d34e29",
-              "leftValue": "={{ $json.snippet }}",
+              "leftValue": "={{ $json.text }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -74,8 +75,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        416,
-        0
+        240,
+        -128
       ],
       "id": "80337b7e-7095-44f5-be46-d0ae8c965bff",
       "name": "If"
@@ -97,14 +98,14 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Summarize this email in 3 bullet points.\\n\\n ID: {{$json.id}}\\n From: {{$json.From}}\\nSubject: {{$json.Subject || 'No subject'}}\\nBody: {{$json.snippet || $json.text || 'No body'}}\"\n    }\n  ]\n}",
+        "jsonBody": "={{\n{\n  \"model\": \"gpt-4o-mini\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": `Analyze this email and return ONLY valid JSON.\n\nEmail:\nFrom: ${$json.headers?.from || \"\"}\nSubject: ${$json.headers?.subject || \"\"}\nBody: ${$json.text || \"\"}\n\nToday's date is: ${$now.toFormat('yyyy-MM-dd')}\nCurrent time is: ${$now.toFormat('HH:mm')} IST\n\nRules:\n\n- category must be EXACTLY one of:\n[\"work\",\"finance\",\"personal\",\"promotion\",\"meeting\",\"spam\",\"urgent\"]\n\n- priority must be EXACTLY one of:\n[\"Low\",\"Medium\",\"High\"]\n\n- needs_reply must be true or false\n\n- meeting_detected must be true or false\n\n- confidence must be an integer between 0 and 100\n\n- If a meeting is detected, extract meeting details with these STRICT rules:\n\n* meeting_date: MUST be the EXACT date mentioned in the email in format YYYY-MM-DD.\n* meeting_time: MUST be the EXACT start time mentioned in the email in 24-hour HH:MM format.\n* meeting_end_time: MUST be the EXACT end time mentioned in the email in 24-hour HH:MM format.\n* If no end time exists, add 1 hour to the start time.\n* meeting_title: short descriptive title.\n\n- Use today's date ONLY to resolve relative dates such as:\n\"tomorrow\", \"next Monday\", \"this Friday\".\n\n- If an explicit date exists, ALWAYS use it.\n\n- All times in the email are IST.\n- Do NOT convert timezones.\n- Do NOT invent dates or times.\n- If meeting details are incomplete, set meeting_detected=false.\n\nCategory examples:\n\nJob alerts, newsletters, internship campaigns, marketing emails → promotion\nCalendar invites, interview schedules, meetings → meeting\nBank alerts, invoices, payments → finance\nScams, phishing, suspicious emails → spam\nCollege work, assignments, project discussions → work\nPersonal conversations → personal\nAnything requiring immediate action → urgent\n\nReturn ONLY raw JSON.\n\n{\n  \"summary\":\"\",\n  \"category\":\"\",\n  \"priority\":\"\",\n  \"needs_reply\":false,\n  \"meeting_detected\":false,\n  \"meeting_title\":\"\",\n  \"meeting_date\":\"\",\n  \"meeting_time\":\"\",\n  \"meeting_end_time\":\"\",\n  \"confidence\":95\n}\n\nIf no meeting exists, leave meeting_title, meeting_date, meeting_time and meeting_end_time as empty strings.`\n    }\n  ],\n  \"temperature\": 0.1\n}\n}}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        944,
-        -224
+        1072,
+        -128
       ],
       "id": "8217c73c-8d06-453f-a537-01a6fa2ddd02",
       "name": "HTTP Request",
@@ -122,8 +123,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        608,
-        -16
+        656,
+        -144
       ],
       "id": "e9917b1a-4d18-4b53-91c5-2f5838cede8f",
       "name": "Loop Over Items"
@@ -135,8 +136,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1328,
-        32
+        1712,
+        -32
       ],
       "id": "13aab7f7-5283-4461-84d9-955808d86389",
       "name": "Wait1",
@@ -150,8 +151,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        1264,
-        -224
+        1792,
+        -352
       ],
       "id": "c3dcf2ff-7ed4-48e5-9be8-1b082f039383",
       "name": "Mark a message as read",
@@ -160,105 +161,6 @@
         "gmailOAuth2": {
           "id": "O8l4pCwjymcR8Ww2",
           "name": "Gmail account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "1QTQ1TJ_h2ODZf6x873ONonL2D4sullW_bo681hGx3Ko",
-          "mode": "list",
-          "cachedResultName": "Email summaries",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QTQ1TJ_h2ODZf6x873ONonL2D4sullW_bo681hGx3Ko/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "Sheet1",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QTQ1TJ_h2ODZf6x873ONonL2D4sullW_bo681hGx3Ko/edit#gid=0"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "Sender": "={{ $json.From }}",
-            "Subject": "={{ $json.Subject }}",
-            "Timestrap": "={{ $now }}",
-            "Id": "={{ $json.id }}"
-          },
-          "matchingColumns": [
-            "Subject"
-          ],
-          "schema": [
-            {
-              "id": "Id",
-              "displayName": "Id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Timestrap",
-              "displayName": "Timestrap",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Sender",
-              "displayName": "Sender",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Subject",
-              "displayName": "Subject",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Summary",
-              "displayName": "Summary",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        784,
-        -224
-      ],
-      "id": "6c0d5e1d-bf9f-4344-8377-af785d178563",
-      "name": "Append row in sheet1",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "DDYyeCbODCPOjece",
-          "name": "Google Sheets account"
         }
       }
     },
@@ -282,8 +184,15 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Summary": "={{$json.choices[0].message.content}}",
-            "Id": "={{ $('Append row in sheet1').item.json.Id }}"
+            "Summary": "={{ $('Code in JavaScript').item.json.summary }}",
+            "Id": "={{ $('Get many messages').item.json.id }}",
+            "Category": "={{ $('Code in JavaScript').item.json.category }}",
+            "Priority": "={{ $('Code in JavaScript').item.json.priority }}",
+            "NeedsReply": "={{ $('Code in JavaScript').item.json.needs_reply }}",
+            "MeetingDetected": "={{ $('Code in JavaScript').item.json.meeting_detected }}",
+            "Confidence": "={{ $('Code in JavaScript').item.json.confidence }}",
+            "Sender": "={{ $('Loop Over Items').item.json.From }}",
+            "Timestamp": "={{ $now }}"
           },
           "matchingColumns": [
             "Id"
@@ -300,14 +209,13 @@
               "removed": false
             },
             {
-              "id": "Timestrap",
-              "displayName": "Timestrap",
+              "id": "Summary",
+              "displayName": "Summary",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
+              "canBeUsedToMatch": true
             },
             {
               "id": "Sender",
@@ -317,26 +225,67 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true,
-              "removed": true
+              "removed": false
             },
             {
-              "id": "Subject",
-              "displayName": "Subject",
+              "id": "Priority",
+              "displayName": "Priority",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true,
-              "removed": true
+              "removed": false
             },
             {
-              "id": "Summary",
-              "displayName": "Summary",
+              "id": "Category",
+              "displayName": "Category",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "NeedsReply",
+              "displayName": "NeedsReply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "MeetingDetected",
+              "displayName": "MeetingDetected",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Confidence",
+              "displayName": "Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -347,8 +296,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1104,
-        -224
+        1552,
+        -352
       ],
       "id": "694c4046-2527-40b1-b187-430c8783f8d5",
       "name": "Append or update row in sheet",
@@ -358,9 +307,215 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const response = $input.item.json;\n\nconsole.log(response);\n\nconst content =\n  response?.choices?.[0]?.message?.content ||\n  response?.data?.choices?.[0]?.message?.content;\n\nif (!content) {\n  return {\n    json: {\n      error: \"No AI response content found\",\n      full_response: response\n    }\n  };\n}\n\nconst cleaned = content\n  .replace(/```json/g, \"\")\n  .replace(/```/g, \"\")\n  .trim();\n\nlet data;\n\ntry {\n  data = JSON.parse(cleaned);\n} catch (e) {\n  return {\n    json: {\n      error: \"Invalid JSON\",\n      raw: cleaned\n    }\n  };\n}\n\nconst labels = {\n  work: \"Label_3272446732333660500\",\n  finance: \"Label_9122724880040644594\",\n  personal: \"Label_2113930991147229230\",\n  promotion: \"Label_2389672418718472155\",\n  meeting: \"Label_8971484299382553051\",\n  spam: \"Label_8953554111217387453\",\n  urgent: \"Label_5791745347457165281\",\n  default: \"Label_3272446732333660500\"\n};\n\nreturn {\n  json: {\n    ...response,\n    summary: data.summary,\n    category: data.category,\n    priority: data.priority,\n    needs_reply: data.needs_reply,\n    meeting_detected: data.meeting_detected === true || data.meeting_detected === \"true\",\n    meeting_title: data.meeting_title,\n    meeting_date: data.meeting_date,\n    meeting_time: data.meeting_time,\n    meeting_end_time: data.meeting_end_time,\n    confidence: data.confidence,\n    gmail_label:\n      labels[data.category?.toLowerCase()] || labels.default\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        -464
+      ],
+      "id": "84ee467c-b670-45e8-bfc9-28084217dfe0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Loop Over Items').item.json.id }}",
+        "labelIds": "={{ $json.gmail_label }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        -464
+      ],
+      "id": "d116985f-85ae-4463-97b8-0de7280492e4",
+      "name": "Add label to message",
+      "webhookId": "38ee1fb8-907c-45cf-85fd-c4b247196980",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Hrhg5elvUyFeuani",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Generate a professional email reply.\\n\\nOriginal Email:\\nFrom: {{ $('Loop Over Items').item.json.From }}\\nSubject: {{ $('Loop Over Items').item.json.Subject }}\\nBody: {{ $('Loop Over Items').item.json.snippet }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        -608
+      ],
+      "id": "b5b6d3c3-3260-43d9-a3e7-22d6c17a7d67",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mUXbnCoZUDHhY2SQ",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=Re: {{ $('Loop Over Items').item.json.Subject }}",
+        "message": "={{ $json.choices[0].message.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        -608
+      ],
+      "id": "5e95ec70-9b8d-4126-adf4-db5b7760e42a",
+      "name": "Create a draft",
+      "webhookId": "e2cda955-69e1-4507-b23f-355263ec63af",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Hrhg5elvUyFeuani",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b52910b7-d0cc-4d70-8e4b-138a71f35fac",
+              "leftValue": "={{ $('Code in JavaScript').item.json.meeting_detected }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "37e2875a-f6db-47dc-8381-81b1f5094c47",
+              "leftValue": "={{ $('Code in JavaScript').item.json.meeting_date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "31bc7469-c7ab-4280-b73a-d7594c0e420d",
+              "leftValue": "={{ $('Code in JavaScript').item.json.confidence }}",
+              "rightValue": 80,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        656,
+        -464
+      ],
+      "id": "9cb3b16d-ac5a-4147-b173-1d75de07ea23",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7e366de6-b9e9-4720-a222-658aa7a83800",
+              "leftValue": "={{ $('Code in JavaScript').item.json.needs_reply }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1088,
+        -448
+      ],
+      "id": "7dae601b-63a7-452c-abd0-b27bf6fac063",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "sonisrushti12@gmail.com",
+          "mode": "list",
+          "cachedResultName": "sonisrushti12@gmail.com"
+        },
+        "start": "={{ $('Code in JavaScript').item.json.meeting_date }}T{{ $('Code in JavaScript').item.json.meeting_time }}:00",
+        "end": "={{ $('Code in JavaScript').item.json.meeting_date }}T{{ $('Code in JavaScript').item.json.meeting_end_time }}:00",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        896,
+        -624
+      ],
+      "id": "88f278c3-684b-4129-a7e9-541413e770f4",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "0Nnxv5CAaJvkCyoH",
+          "name": "Google Calendar account"
+        }
+      }
     }
   ],
-  "pinData": {},
   "connections": {
     "Schedule Trigger": {
       "main": [
@@ -392,6 +547,18 @@
             "type": "main",
             "index": 0
           }
+        ],
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -400,18 +567,7 @@
         [],
         [
           {
-            "node": "Append row in sheet1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request": {
-      "main": [
-        [
-          {
-            "node": "Append or update row in sheet",
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
@@ -440,17 +596,6 @@
         ]
       ]
     },
-    "Append row in sheet1": {
-      "main": [
-        [
-          {
-            "node": "HTTP Request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Append or update row in sheet": {
       "main": [
         [
@@ -461,18 +606,102 @@
           }
         ]
       ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a draft": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate"
-  },
-  "versionId": "95682349-c039-438c-8678-3fd068d2a50d",
+  "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "87caad5a6826a2141e4ff2fb9989f52a087b3f80005059ee6a4cc07e25b6cf0b"
-  },
-  "id": "RmxvlB27rMzwMkNY",
-  "tags": []
+  }
 }
