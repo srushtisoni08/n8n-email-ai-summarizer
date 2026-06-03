@@ -29,7 +29,7 @@ This n8n workflow runs on a **five minute schedule**, picks up to **5 unread ema
 ---
 
 ## Workflow Screenshot
-![Workflow Overview](assets/workflow.png)
+![Workflow Overview](assets/n8n_email_workflow.png)
 
 ---
 
